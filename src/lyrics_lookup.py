@@ -7,7 +7,7 @@ class LyricsResolver:
     page_url = "http://genius.com"
     headers = None
 
-    def init(self, apikey):
+    def __init__(self, apikey):
         self.headers = {
             'Authorization':
             'Bearer ' + apikey
@@ -26,9 +26,10 @@ class LyricsResolver:
             song_path = hits[0]["result"]["path"]
             return self.__lyrics_from_song_api_path__(song_path)
 
+        return None
 
-# See https://bigishdata.com/2016/09/27/
-# getting-song-lyrics-from-geniuss-api-scraping/
+    # See https://bigishdata.com/2016/09/27/
+    # getting-song-lyrics-from-geniuss-api-scraping/
     def __lyrics_from_song_api_path__(self, song_path):
         # gotta go regular html scraping... come on Genius
         page_url = self.page_url + song_path
