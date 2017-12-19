@@ -1,4 +1,5 @@
 import requests
+from fuzzywuzzy import process
 from bs4 import BeautifulSoup
 
 
@@ -23,14 +24,16 @@ class LyricsResolver:
         hits = json["response"]["hits"]
 
         if len(hits) != 0:
-            song_path = hits[0]["result"]["path"]
-            return self.__lyrics_from_song_api_path__(song_path)
-
-        return None
+            song = hits[0]["result"]
+            song_path = song["path"]
+            full_title = song["full_title"]
+            return (full_title, self.__rip_lyrics_from_genius(song_path))
+        else:
+            return None
 
     # See https://bigishdata.com/2016/09/27/
     # getting-song-lyrics-from-geniuss-api-scraping/
-    def __lyrics_from_song_api_path__(self, song_path):
+    def __rip_lyrics_from_genius(self, song_path):
         # gotta go regular html scraping... come on Genius
         page_url = self.page_url + song_path
         page = requests.get(page_url)
@@ -41,3 +44,17 @@ class LyricsResolver:
         # updated css where the lyrics are based in HTML
         lyrics = html.find("div", class_="lyrics").get_text()
         return lyrics
+
+
+def extract_lines(lyrics, partial_lyrics):
+    lyrics = lyrics.split('\n')
+    lyrics = [x for x in lyrics if len(x) > 0 and x[0] != "["]
+
+    best_match, confidence = process.extractOne(partial_lyrics, lyrics)
+
+    lyrics_index = lyrics.index(best_match)
+
+    if(len(lyrics) < lyrics_index + 2):
+        return None
+
+    return (lyrics[lyrics_index + 1], confidence)
