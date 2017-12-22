@@ -91,12 +91,14 @@ class CommentBot:
 
 
 def check_for_valid_line(comment):
-    comment_lines = comment.split('\n')
-    last_line = comment_lines[-1]
+    comment_lines = comment.strip().split('\n')
+    last_line = comment_lines[-1].strip()
     sentences = last_line.split(".")
-    last_sentence = sentences[-1]
+    sentences = [x for x in sentences if not (x.isspace() or x == '')]
+    last_sentence = sentences[-1].strip()
     line_length = len(last_sentence.split(' '))
 
+    print("Last_sentence: {}".format(last_sentence))
     if line_length < MIN_WORD_COUNT or line_length > MAX_WORD_COUNT:
         return None
 
