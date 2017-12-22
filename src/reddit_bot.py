@@ -4,7 +4,7 @@ import time
 
 MIN_WORD_COUNT = 5
 MAX_WORD_COUNT = 15
-BEGINNING_WAIT_TIME_SECONDS = 3
+BEGINNING_WAIT_TIME_SECONDS = 5
 REPLY_FAIL_RETRY_TIME_SECONDS = 10
 
 BOT_MESSAGE = "^^^I'm a bot *boop* *beep* and this song is {}. Here is my [source]({})"

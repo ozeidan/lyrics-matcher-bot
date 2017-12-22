@@ -3,7 +3,7 @@ from lyrics_lookup import LyricsResolver
 import queue
 
 
-RESOLVER_THREAD_COUNT = 5
+RESOLVER_THREAD_COUNT = 10
 
 snippet_queue = queue.Queue()
 lyrics_queue = queue.Queue()
