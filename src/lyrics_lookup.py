@@ -28,10 +28,14 @@ class LyricsResolver:
     def __main_loop(self):
         while True:
             (snippet, comment) = LyricsResolver.snippet_queue.get()
+            print("Fetching lyrics for comment by {}".format(
+                comment.author.name))
 
             lyrics_obj = self.__find_lyrics_by_snippet(snippet)
 
             if lyrics_obj is None:
+                print("Found no matching lyrics for comment by {}".format(
+                    comment.author.name))
                 continue
 
             (song_title, lyrics) = lyrics_obj
@@ -39,12 +43,21 @@ class LyricsResolver:
                                                                   snippet)
 
             if matching_obj is None:
+                print("Found good line for this comment")
                 continue
 
             (matching_line, confidence) = matching_obj
 
+            print("Comment by {}: found song {} with confidence {}".format(
+                  comment.author,
+                  song_title,
+                  confidence))
+
+            print("Last line of commenter: {}".format(snippet))
+            print("Matching line: {}".format(matching_line))
 
             if(confidence < CONFIDENCE_THRESHOLD):
+                print("Confidence too low")
                 continue
 
             LyricsResolver.lyrics_queue.put(
