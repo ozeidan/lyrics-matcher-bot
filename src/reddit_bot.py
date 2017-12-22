@@ -7,6 +7,10 @@ MAX_WORD_COUNT = 15
 BEGINNING_WAIT_TIME_SECONDS = 3
 REPLY_FAIL_RETRY_TIME_SECONDS = 10
 
+BOT_MESSAGE = "^^^I'm a bot *boop* *beep* and this song is {}. Here is my [source]({})"
+
+GITHUB_LINK = "https://github.com/ozeidan/lyrics-matcher-bot"
+
 
 class CommentBot:
     snippet_queue = None
@@ -53,8 +57,9 @@ class CommentBot:
 
     def __main_loop(self):
         while True:
-            (line, comment) = CommentBot.lyrics_queue.get()
-            CommentBot.__reply_to_comment(line, comment)
+            (line, song_title, comment) = CommentBot.lyrics_queue.get()
+            reply = CommentBot.__transform_reply(line, song_title)
+            CommentBot.__reply_to_comment(reply, comment)
 
     def __reply_to_comment(reply, comment):
         print("Replying {} to comment at {}".format(reply,
@@ -68,6 +73,21 @@ class CommentBot:
 
             time.sleep(REPLY_FAIL_RETRY_TIME_SECONDS)
             CommentBot.__reply_to_comment(reply, comment)
+
+    def __transform_reply(reply, song_title):
+        reply += " 🎶\n"
+        reply += "***\n"
+
+        bot_message = BOT_MESSAGE.format(song_title,
+                                         GITHUB_LINK)
+
+        print(bot_message)
+
+        bot_message = bot_message.replace(' ', '&#32;')
+
+        print(bot_message)
+
+        return reply + bot_message
 
 
 def check_for_valid_line(comment):

@@ -61,7 +61,7 @@ class LyricsResolver:
                 continue
 
             LyricsResolver.lyrics_queue.put(
-                (matching_line, comment))
+                (matching_line, song_title, comment))
 
     def __find_lyrics_by_snippet(self, lyrics):
         search_url = base_url + "/search"
