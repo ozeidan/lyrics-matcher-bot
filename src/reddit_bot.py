@@ -31,6 +31,9 @@ class CommentBot:
             if (time.time() - start_time) > BEGINNING_WAIT_TIME_SECONDS:
                 self.handle_comment(comment)
 
+            print("Size of queues: ({},{})".format(CommentBot.snippet_queue.qsize(),
+                                                   CommentBot.lyrics_queue.qsize()))
+
     def handle_comment(self, comment):
         print("Parsing comment by {}".format(comment.author.name))
 
@@ -40,6 +43,9 @@ class CommentBot:
 
         if comment.author.name == self.reddit.config.username:
             print("Not replying to own comment")
+            return
+
+        if comment.author.name == "rosey-the-bot":
             return
 
         for child in comment.replies:
@@ -81,11 +87,7 @@ class CommentBot:
         bot_message = BOT_MESSAGE.format(song_title,
                                          GITHUB_LINK)
 
-        print(bot_message)
-
         bot_message = bot_message.replace(' ', '&#32;')
-
-        print(bot_message)
 
         return reply + bot_message
 
@@ -98,7 +100,6 @@ def check_for_valid_line(comment):
     last_sentence = sentences[-1].strip()
     line_length = len(last_sentence.split(' '))
 
-    print("Last_sentence: {}".format(last_sentence))
     if line_length < MIN_WORD_COUNT or line_length > MAX_WORD_COUNT:
         return None
 
