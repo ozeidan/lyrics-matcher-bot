@@ -1,21 +1,57 @@
 import requests
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup
+import threading
+
+CONFIDENCE_THRESHOLD = 95
+base_url = "http://api.genius.com"
+page_url = "http://genius.com"
 
 
 class LyricsResolver:
-    base_url = "http://api.genius.com"
-    page_url = "http://genius.com"
-    headers = None
+    snippet_queue = None
+    lyrics_queue = None
 
     def __init__(self, apikey):
         self.headers = {
             'Authorization':
             'Bearer ' + apikey
         }
+        self.thread = threading.Thread(target=self.__main_loop)
 
-    def find_lyrics_by_fragment(self, lyrics):
-        search_url = self.base_url + "/search"
+    def start(self):
+        self.thread.start()
+
+    def stop(self):
+        self.thread.stop()
+
+    def __main_loop(self):
+        while True:
+            (snippet, comment) = LyricsResolver.snippet_queue.get()
+
+            lyrics_obj = self.__find_lyrics_by_snippet(snippet)
+
+            if lyrics_obj is None:
+                continue
+
+            (song_title, lyrics) = lyrics_obj
+            matching_obj = LyricsResolver.__extract_matching_line(lyrics,
+                                                                  snippet)
+
+            if matching_obj is None:
+                continue
+
+            (matching_line, confidence) = matching_obj
+
+
+            if(confidence < CONFIDENCE_THRESHOLD):
+                continue
+
+            LyricsResolver.lyrics_queue.put(
+                (matching_line, comment))
+
+    def __find_lyrics_by_snippet(self, lyrics):
+        search_url = base_url + "/search"
         params = {'q': lyrics}
         response = requests.get(
             search_url, params=params, headers=self.headers)
@@ -27,16 +63,17 @@ class LyricsResolver:
             song = hits[0]["result"]
             song_path = song["path"]
             full_title = song["full_title"]
-            return (full_title, self.__rip_lyrics_from_genius(song_path))
+            return (full_title,
+                    LyricsResolver.__rip_lyrics_from_genius(song_path))
         else:
             return None
 
-    # See https://bigishdata.com/2016/09/27/
-    # getting-song-lyrics-from-geniuss-api-scraping/
-    def __rip_lyrics_from_genius(self, song_path):
+        # See https://bigishdata.com/2016/09/27/
+        # getting-song-lyrics-from-geniuss-api-scraping/
+    def __rip_lyrics_from_genius(song_path):
         # gotta go regular html scraping... come on Genius
-        page_url = self.page_url + song_path
-        page = requests.get(page_url)
+        target_url = page_url + song_path
+        page = requests.get(target_url)
         html = BeautifulSoup(page.text, "html.parser")
         # remove script tags that they put in the middle of the lyrics
         [h.extract() for h in html('script')]
@@ -45,16 +82,15 @@ class LyricsResolver:
         lyrics = html.find("div", class_="lyrics").get_text()
         return lyrics
 
+    def __extract_matching_line(lyrics, partial_lyrics):
+        lyrics = lyrics.split('\n')
+        lyrics = [x for x in lyrics if len(x) > 0 and x[0] != "["]
 
-def extract_lines(lyrics, partial_lyrics):
-    lyrics = lyrics.split('\n')
-    lyrics = [x for x in lyrics if len(x) > 0 and x[0] != "["]
+        best_match, confidence = process.extractOne(partial_lyrics, lyrics)
 
-    best_match, confidence = process.extractOne(partial_lyrics, lyrics)
+        lyrics_index = lyrics.index(best_match)
 
-    lyrics_index = lyrics.index(best_match)
+        if(len(lyrics) < lyrics_index + 2):
+            return None
 
-    if(len(lyrics) < lyrics_index + 2):
-        return None
-
-    return (lyrics[lyrics_index + 1], confidence)
+        return (lyrics[lyrics_index + 1], confidence)
