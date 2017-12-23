@@ -99,7 +99,11 @@ class LyricsResolver:
         lyrics = lyrics.split('\n')
         lyrics = [x for x in lyrics if len(x) > 0 and x[0] != "["]
 
-        best_match, confidence = process.extractOne(partial_lyrics, lyrics)
+        result = process.extractOne(partial_lyrics, lyrics)
+        if result is None:
+            return None
+
+        best_match, confidence = result
 
         lyrics_index = lyrics.index(best_match)
 
