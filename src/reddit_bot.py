@@ -97,6 +97,10 @@ def check_for_valid_line(comment):
     last_line = comment_lines[-1].strip()
     sentences = last_line.split(".")
     sentences = [x for x in sentences if not (x.isspace() or x == '')]
+
+    if len(sentences) == 0:
+        return None
+
     last_sentence = sentences[-1].strip()
     line_length = len(last_sentence.split(' '))
 
