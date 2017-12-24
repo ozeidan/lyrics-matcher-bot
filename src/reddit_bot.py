@@ -30,9 +30,8 @@ class CommentBot:
         for comment in self.subreddits.stream.comments():
             if (time.time() - start_time) > BEGINNING_WAIT_TIME_SECONDS:
                 self.handle_comment(comment)
-
-            print("Size of queues: ({},{})".format(CommentBot.snippet_queue.qsize(),
-                                                   CommentBot.lyrics_queue.qsize()))
+                print("Size of queues: ({},{})".format(CommentBot.snippet_queue.qsize(),
+                                                       CommentBot.lyrics_queue.qsize()))
 
     def handle_comment(self, comment):
         print("Parsing comment by {}".format(comment.author.name))
@@ -79,6 +78,8 @@ class CommentBot:
 
             time.sleep(REPLY_FAIL_RETRY_TIME_SECONDS)
             CommentBot.__reply_to_comment(reply, comment)
+        except Exception:
+            return
 
     def __transform_reply(reply, song_title):
         reply += " 🎶\n"
